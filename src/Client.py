@@ -57,7 +57,7 @@ def sign_in():
     while True:
         try:
             # 发送用户登陆消息
-            authServer.send(pack_mess(uIP=local_public_ip, uID=user_accout, sIP=global_config['AppServer']['ip'], sID=global_config['AppServer']['id'], cre='', mess_type='log', mess=f'{user_accout}:{user_password}'))
+            authServer.send(pack_mess(uIP=local_public_ip, uID=user_accout, sIP='', sID=global_config['AppServer']['id'], cre='', mess_type='log', mess=f'{user_accout}:{user_password}'))
 
             # 服务器返回消息
             date = authServer.recv(1024)
@@ -92,14 +92,14 @@ def sign_in():
 
 
 # 与应用服务器敲门授权票据
-def access_application(credential: str):
+def access_application(appserver_ip:str, credential: str):
     # 连接应用服务器
     while True:
         try:
             appServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            appServer.connect((global_config['AppServer']['ip'], int(global_config['AppServer']['port'])))
+            appServer.connect((appserver_ip, int(global_config['AppServer']['port'])))
             print('应用服务器连接成功')
-            print(f'[{ctime()}] 来自 ' + global_config['AppServer']['ip'] + ' 的消息: ' + appServer.recv(1024).decode('utf-8'))
+            print(f'[{ctime()}] 来自 ' + appserver_ip + ' 的消息: ' + appServer.recv(1024).decode('utf-8'))
             break
         except Exception as e:
             print(f'[{ctime()}] 连接应用服务器失败，五秒后重试...')
@@ -112,7 +112,7 @@ def access_application(credential: str):
     while True:
         try:
             # 发送应用验证消息
-            appServer.send(pack_mess(uIP=local_public_ip, uID=user_accout, sIP=global_config['AppServer']['ip'], sID=global_config['AppServer']['id'], cre='', mess_type='cre', mess=f'{credential}'))
+            appServer.send(pack_mess(uIP=local_public_ip, uID=user_accout, sIP=appserver_ip, sID=global_config['AppServer']['id'], cre='', mess_type='cre', mess=f'{credential}'))
 
             # 服务器返回消息
             date = appServer.recv(1024)
@@ -124,7 +124,7 @@ def access_application(credential: str):
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'[{ctime()}] 来自 ' + global_config['AppServer']['ip'] + ' 的消息: ' + date_str)
+            print(f'[{ctime()}] 来自 ' + appserver_ip + ' 的消息: ' + date_str)
             # 解析消息
             validation_result = json.loads(date_str)
 
@@ -159,7 +159,7 @@ def main():
         sign_in_result = sign_in()
         if sign_in_result != 'Failure':
             print('登陆成功')
-            validation_result = access_application(sign_in_result['content'])
+            validation_result = access_application(sign_in_result['serverIP'], sign_in_result['content'])
             if validation_result != 'invalid':
                 print('成功访问应用服务器！')
 
