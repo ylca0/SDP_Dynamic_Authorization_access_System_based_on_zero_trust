@@ -28,10 +28,10 @@ print('=========SDP权限服务器=========')
 try:
     f = open('config.yaml', 'r')
     global_config = yaml.load(f.read(), Loader=yaml.FullLoader)
-    # {'AuthServer': {'port': 6789, 'id': 1, 'db_host': 'localhost', 'db_user': 'root', 'db_password': 'cao272400952', 'db_database': 'SDP', 'certificate_validity': 60}, 'AppServer': {'port': 6790, 'id': 1}, 'Client': {'id': 1}}
-    print('读取配置文件：\n====================')
+    # {'AuthServer': {'port': 6789, 'id': 1, 'db_host': 'localhost', 'db_user': 'root', 'db_password': '', 'db_database': 'SDP', 'certificate_validity': 60}, 'AppServer': {'port': 6790, 'id': 1}, 'Client': {'id': 1}}
+    print('==========读取配置文件=========')
     f = open('config.yaml', 'r')
-    print(f.read() + '\n================================')
+    print(f.read() + '\n===============================')
     f.close()
 
 except Exception as e:
