@@ -76,10 +76,11 @@ def appInstance(client_socket, ip_addr, userInfo:dict):
 
 
 def accessRequest(message: dict, current_credential:str) -> str:
+
     # 连接权限服务器
-    authServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while True:
         try:
+            authServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             authServer.connect((global_config['AuthServer']['ip'], int(global_config['AuthServer']['port'])))
             print('权限服务器连接成功')
             # 接收消息
@@ -87,6 +88,7 @@ def accessRequest(message: dict, current_credential:str) -> str:
             break
         except Exception as e:
             print(f'[{ctime()}] 连接权限服务器失败，五秒后重试...')
+            authServer.close()
             sleep(5)
             continue
     

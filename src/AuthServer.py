@@ -73,13 +73,17 @@ def sign_in(message: dict) -> str:
     cursor.execute(f"SELECT * FROM credential WHERE account = '{account}'")
 
     # 获取查找到的结果
-    search_accout, search_password = cursor.fetchone()
+    try:
+        search_accout, search_password = cursor.fetchone()
+    except Exception as e:
+        print('找不到账户:', account)
+        return 'Failure'
 
     if search_accout == account and search_password == password:
         print('登录成功')
         return gen_cred(message)
     else:
-        print('登陆失败：凭证错误')
+        print('登陆失败：密码错误')
         return 'Failure'
 
 
@@ -88,11 +92,11 @@ def gen_cred(message: dict):
     sha256_obj = hashlib.sha256()
 
     sha256_obj.update(message["userIP"].encode('utf-8'))
-    sha256_obj.update(message["userID"].encode('utf-8'))
+    sha256_obj.update(str(message["userID"]).encode('utf-8'))
     # 要请求的应用服务器ip
     sha256_obj.update(global_config['AppServer']['ip'].encode('utf-8'))
     # 要请求的用户服务器id，约定在登陆时放入content中
-    sha256_obj.update(message['serverID'].encode('utf-8'))
+    sha256_obj.update(str(message['serverID']).encode('utf-8'))
 
     # 获取凭证生成时间
     current_time = int(gTime())
@@ -100,7 +104,7 @@ def gen_cred(message: dict):
     sha256_obj.update(str(current_time - (current_time % global_config['AuthServer']['certificate_validity'])).encode('utf-8'))
     
     # 加盐
-    sha256_obj.update(str(global_config['AuthServer']['server_private_key']).encode('utf-8'))
+    sha256_obj.update(global_config['AuthServer']['server_private_key'].encode('utf-8'))
 
     # 返回凭证
     return sha256_obj.hexdigest()
@@ -110,9 +114,9 @@ def cert_verify(message: dict) -> bool:
     sha256_obj = hashlib.sha256()
 
     sha256_obj.update(message["userIP"].encode('utf-8'))
-    sha256_obj.update(message["userID"].encode('utf-8'))
+    sha256_obj.update(str(message["userID"]).encode('utf-8'))
     sha256_obj.update(message['serverIP'].encode('utf-8'))
-    sha256_obj.update(message['serverID'].encode('utf-8'))
+    sha256_obj.update(str(message['serverID']).encode('utf-8'))
 
     # 获取凭证生成时间
     current_time = int(gTime())
@@ -120,7 +124,7 @@ def cert_verify(message: dict) -> bool:
     sha256_obj.update(str(current_time - (current_time % global_config['AuthServer']['certificate_validity'])).encode('utf-8'))
 
     # 加盐
-    sha256_obj.update(str(global_config['AuthServer']['server_private_key']).encode('utf-8'))
+    sha256_obj.update(global_config['AuthServer']['server_private_key'].encode('utf-8'))
 
     # 生成当前会话绑定的用户与服务端哈希
     hash_result = sha256_obj.hexdigest()
@@ -155,8 +159,6 @@ def tcp_link(client_socket, ip_addr):
             # 打印消息
             print(f'[{ctime()}] 来自 {ip_addr} 的消息: {date_str}')
 
-
-            print(date_str)
 
             # 解析消息到字典变量
             message = json.loads(date_str)
