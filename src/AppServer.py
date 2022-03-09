@@ -37,10 +37,10 @@ def appInstance(client_socket, ip_addr, userInfo:dict):
             # 接收消息
             date = client_socket.recv(1024)
             if not date:
-                print('[%s] 失去权限服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
+                print('[%s] 失去用户客户端的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
                 break
             # 解码消息
-            date_str = date.decode('utf-8')
+            date_str = date.decode('utf-8').strip()
 
             # 打印消息
             print(f'[{ctime()}] 来自 ' + ip_addr[0] + ' 的消息: ' + date_str)
@@ -58,11 +58,7 @@ def appInstance(client_socket, ip_addr, userInfo:dict):
             # 凭证有效
             else:
                 client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=userInfo['serverID'], cre='', mess_type='con', mess='成功访问应用'))
-            
-
-
-
-
+       
         except Exception as e:
             print('会话出错:')
             print(e)
@@ -86,6 +82,8 @@ def accessRequest(message: dict, current_credential:str) -> str:
         try:
             authServer.connect((global_config['AuthServer']['ip'], int(global_config['AuthServer']['port'])))
             print('权限服务器连接成功')
+            # 接收消息
+            authServer.recv(1024)
             break
         except Exception as e:
             print(f'[{ctime()}] 连接权限服务器失败，五秒后重试...')
@@ -95,8 +93,7 @@ def accessRequest(message: dict, current_credential:str) -> str:
     
     while True:
         try:
-            # 接收消息
-            authServer.recv(1024)
+            
             # 发送用户凭证消息
             authServer.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='cre', mess=current_credential))
             # 服务器返回验证消息
@@ -105,7 +102,7 @@ def accessRequest(message: dict, current_credential:str) -> str:
                 print('[%s] 失去权限服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
                 break
             # 解码消息
-            date_str = date.decode('utf-8')
+            date_str = date.decode('utf-8').strip()
             # 打印消息
             print(f'[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + date_str)
             # 解析消息
@@ -152,7 +149,7 @@ def tcp_link(client_socket, ip_addr):
 
         try:
             # 解码消息
-            date_str = date.decode('utf-8')[:-1]
+            date_str = date.decode('utf-8').strip()
             # 打印消息
             print(f'[{ctime()}] 来自 {ip_addr} 的消息: {date_str}')
 

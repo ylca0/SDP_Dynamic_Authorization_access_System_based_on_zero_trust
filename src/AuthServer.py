@@ -166,10 +166,12 @@ def tcp_link(client_socket, ip_addr):
             if message['mess_type'] == 'log':
                 # 调用登陆函数
                 sign_in_result = sign_in(message)
+
                 # 凭证错误，登陆失败
                 if sign_in_result == 'Failure':
                     client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP='', sID=message['serverID'], cre='', mess_type='cre', mess=sign_in_result))
                     break
+                # 登录成功，发送生成的凭证
                 else:
                     client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=global_config['AppServer']['ip'], sID=message['serverID'], cre='', mess_type='cre', mess=sign_in_result))
             # 凭证验证消息
