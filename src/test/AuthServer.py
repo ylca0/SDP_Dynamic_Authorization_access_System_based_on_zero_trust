@@ -5,9 +5,7 @@ import hashlib
 import socket
 import threading
 from time import ctime
-from httpx import Auth
 import pymysql
-from rsa import verify
 from util import *
 import yaml
 
@@ -199,23 +197,14 @@ def tcp_link(client_socket, ip_addr):
 
 def main():
     global db
-    # 创建 socket 对象
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # 设置通讯端口
-    port = global_config['AuthServer']['port']
-
-    # 监听
-    server_socket.bind(("0.0.0.0", port))
-
-    # 设置最大连接数，超过后排队
-    server_socket.listen(5)
+    ssl_socket = ssl_server(global_config['AuthServer']['ip'], global_config['AuthServer']['port'], global_config['AuthServer']['listen_num'])
 
     # 循环建立新的连接
     while True:
         try:
+            
             # 建立客户端连接
-            client_socket, ip_addr = server_socket.accept()
+            client_socket, ip_addr = ssl_socket.accept()
 
             t = threading.Thread(
                 target=tcp_link, args=(client_socket, ip_addr))
@@ -227,8 +216,8 @@ def main():
             break
 
     # 关闭连接
-    server_socket.close()
-    # 关闭数据库
+    ssl_socket.close()
+    # # 关闭数据库
     db.close()
 
 

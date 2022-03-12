@@ -69,12 +69,6 @@ def appInstance(client_socket, ip_addr, userInfo:dict):
 
 
 
-    
-
-
-
-
-
 def accessRequest(message: dict, current_credential:str) -> str:
 
     # 连接权限服务器
@@ -123,14 +117,6 @@ def accessRequest(message: dict, current_credential:str) -> str:
     
     authServer.close()
     return 'invalid'
-
-
-
-
-
-    
-
-
 
 
 

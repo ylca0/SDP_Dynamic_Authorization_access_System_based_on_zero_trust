@@ -1,0 +1,17 @@
+AuthServer:
+  ip: '127.0.0.1'
+  port: 1111
+  id: 1
+  db_host: 'localhost'
+  db_user: 'root'
+  db_password: '123456'
+  db_database: 'SDP'
+  certificate_validity: 60
+  server_private_key: '123456'
+  listen_num: 5
+AppServer:
+  port: 2222
+  id: 1
+  ip: '127.0.0.1'
+  listen_num: 5
+
