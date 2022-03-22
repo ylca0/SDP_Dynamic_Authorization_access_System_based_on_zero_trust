@@ -208,7 +208,7 @@ def main():
 
             t = threading.Thread(
                 target=tcp_link, args=(client_socket, ip_addr))
-            t.setDaemon(True)
+            t.setDaemon = True
             t.start()
 
         except Exception as e:
