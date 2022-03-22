@@ -44,7 +44,7 @@ def sign_in():
             authServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             authServer.connect((global_config['AuthServer']['ip'], int(global_config['AuthServer']['port'])))
             print('权限服务器连接成功')
-            print(f'[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + authServer.recv(1024).decode('utf-8'))
+            print(f'\n[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + authServer.recv(1024).decode('utf-8'))
             break
         except Exception as e:
             print(f'[{ctime()}] 连接权限服务器失败，五秒后重试...')
@@ -63,13 +63,13 @@ def sign_in():
             date = authServer.recv(1024)
             # 检查是否断开
             if not date:
-                print('[%s] 失去权限服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
+                print('\n[%s] 失去权限服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
                 break
             
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + date_str)
+            print(f'\n[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + date_str)
             # 解析消息
             server_result = json.loads(date_str)
 
@@ -99,7 +99,7 @@ def access_application(appserver_ip:str, credential: str):
             appServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             appServer.connect((appserver_ip, int(global_config['AppServer']['port'])))
             print('应用服务器连接成功')
-            print(f'[{ctime()}] 来自 ' + appserver_ip + ' 的消息: ' + appServer.recv(1024).decode('utf-8'))
+            print(f'\n[{ctime()}] 来自 ' + appserver_ip + ' 的消息: ' + appServer.recv(1024).decode('utf-8'))
             break
         except Exception as e:
             print(f'[{ctime()}] 连接应用服务器失败，五秒后重试...')
@@ -118,13 +118,13 @@ def access_application(appserver_ip:str, credential: str):
             date = appServer.recv(1024)
             # 检查是否断开
             if not date:
-                print('[%s] 失去应用服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
+                print('\n[%s] 失去应用服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
                 break
             
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'[{ctime()}] 来自 ' + appserver_ip + ' 的消息: ' + date_str)
+            print(f'\n[{ctime()}] 来自 ' + appserver_ip + ' 的消息: ' + date_str)
             # 解析消息
             validation_result = json.loads(date_str)
 

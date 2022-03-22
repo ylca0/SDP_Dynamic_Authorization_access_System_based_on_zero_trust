@@ -138,7 +138,7 @@ def cert_verify(message: dict) -> bool:
 
 # 处理新建的连接
 def tcp_link(client_socket, ip_addr):
-    print("新的tcp_link：%s" % str(ip_addr))
+    print("\n\n新的tcp_link：%s" % str(ip_addr))
 
     msg = '欢迎访问SDP权限服务器！' + "\r\n"
     client_socket.send(msg.encode('utf-8'))
@@ -148,14 +148,14 @@ def tcp_link(client_socket, ip_addr):
         # 接受来自客户端数据
         date = client_socket.recv(1024)
         if not date:
-            print('[%s] 连接断开:%s ' % (ctime(), str(ip_addr)))
+            print('\n[%s] 连接断开:%s ' % (ctime(), str(ip_addr)))
             break
 
         try:
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'[{ctime()}] 来自 {ip_addr} 的消息: {date_str}')
+            print(f'\n[{ctime()}] 来自 {ip_addr} 的消息: {date_str}')
 
 
             # 解析消息到字典变量
@@ -186,8 +186,8 @@ def tcp_link(client_socket, ip_addr):
 
 
         except Exception as e:
-            client_socket.send(f'请求处理错误！连接断开：{ip_addr}\n'.encode('utf-8'))
-            print(f'请求处理错误！连接断开：{ip_addr}')
+            client_socket.send(f'\n请求处理错误！连接断开：{ip_addr}\n'.encode('utf-8'))
+            print(f'\n请求处理错误！连接断开：{ip_addr}')
             print(e)
             break
 

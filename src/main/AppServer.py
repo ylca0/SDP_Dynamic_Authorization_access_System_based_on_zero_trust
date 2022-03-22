@@ -37,13 +37,13 @@ def appInstance(client_socket, ip_addr, userInfo:dict):
             # 接收消息
             date = client_socket.recv(1024)
             if not date:
-                print('[%s] 失去用户客户端的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
+                print('\n[%s] 失去用户客户端的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
                 break
             # 解码消息
             date_str = date.decode('utf-8').strip()
 
             # 打印消息
-            print(f'[{ctime()}] 来自 ' + ip_addr[0] + ' 的消息: ' + date_str)
+            print(f'\n[{ctime()}] 来自 ' + ip_addr[0] + ' 的消息: ' + date_str)
 
             # 解析消息
             message = json.loads(date_str)
@@ -95,12 +95,12 @@ def accessRequest(message: dict, current_credential:str) -> str:
             # 服务器返回验证消息
             date = authServer.recv(1024)
             if not date:
-                print('[%s] 失去权限服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
+                print('\n[%s] 失去权限服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
                 break
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + date_str)
+            print(f'\n[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + date_str)
             # 解析消息
             server_result = json.loads(date_str)
 
@@ -122,7 +122,7 @@ def accessRequest(message: dict, current_credential:str) -> str:
 
 # 处理新建的连接
 def tcp_link(client_socket, ip_addr):
-    print("新的用户资源访问连接：%s" % str(ip_addr))
+    print("\n新的用户资源访问连接：%s" % str(ip_addr))
 
     msg = '欢迎访问SDP应用服务器！' + "\r\n"
     client_socket.send(msg.encode('utf-8'))
@@ -139,7 +139,7 @@ def tcp_link(client_socket, ip_addr):
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'[{ctime()}] 来自 {ip_addr} 的消息: {date_str}')
+            print(f'\n[{ctime()}] 来自 {ip_addr} 的消息: {date_str}')
 
             # 解析消息到字典变量
             message = json.loads(date_str)
