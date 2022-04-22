@@ -153,16 +153,11 @@ class ClientWindow:
             ssl_appServer.send(pack_mess(uIP=self.local_public_ip, uID=self.user_accout, sIP=appserver_ip,
                                 sID=self.global_config['AppServer']['id'], cre=credential, mess_type='con', mess=''))
             
-            # 服务器返回消息
-            date = ssl_appServer.recv(1024)
-
-            # 检查是否断开
-            if not date:
-                self.log(add=appserver_ip, type=DISCONNECT)
-                return self.log(con='连接断开，请稍后重试...', type=ERROR)
+            
+            data = ssl_appServer.recv(1024)
 
             # 解码消息
-            date_str = date.decode('utf-8').strip()
+            date_str = data.decode('utf-8').strip()
             # 打印消息
             self.log(add=appserver_ip, con=date_str, type=RECEIVE)
             # 解析消息
@@ -172,9 +167,7 @@ class ClientWindow:
             if accesss_result['content'] != 'invalid':
                 self.log(con="成功访问应用服务器！")
                 self.log(con=accesss_result)
-                self.ui2.brower.clear()
                 self.ui2.brower.append(accesss_result['content'])
-                self.ui2.brower.load
                 return
 
             # 关闭连接，返回结果
@@ -206,39 +199,37 @@ class ClientWindow:
                 continue
 
         # 接收服务器消息
-        while True:
-            try:
-                # 发送应用验证消息
-                ssl_appServer.send(pack_mess(uIP=self.local_public_ip, uID=self.user_accout, sIP=appserver_ip,
-                                    sID=self.global_config['AppServer']['id'], cre='', mess_type='cre', mess=f'{credential}'))
+        try:
+            # 发送应用验证消息
+            ssl_appServer.send(pack_mess(uIP=self.local_public_ip, uID=self.user_accout, sIP=appserver_ip,
+                                sID=self.global_config['AppServer']['id'], cre='', mess_type='cre', mess=f'{credential}'))
 
-                # 服务器返回消息
-                date = ssl_appServer.recv(1024)
-                # 检查是否断开
-                if not date:
-                    self.log(add=self.global_config['AppServer']['ip'], type=DISCONNECT)
-                    break
+            # 服务器返回消息
+            date = ssl_appServer.recv(1024)
+            # 检查是否断开
+            if not date:
+                self.log(add=self.global_config['AppServer']['ip'], type=DISCONNECT)
+                return 'invalid'
 
-                # 解码消息
-                date_str = date.decode('utf-8').strip()
-                # 打印消息
-                self.log(add=appserver_ip, con=date_str, type=RECEIVE)
-                # 解析消息
-                validation_result = json.loads(date_str)
+            # 解码消息
+            date_str = date.decode('utf-8').strip()
+            # 打印消息
+            self.log(add=appserver_ip, con=date_str, type=RECEIVE)
+            # 解析消息
+            validation_result = json.loads(date_str)
 
-                # 如果验证敲门成功
-                if validation_result['content'] != 'invalid':
-                    self.log(con="成功登陆应用服务器！")
-                    self.log(con=validation_result)
-                    self.access_application(appserver_ip, ssl_appServer, credential)
+            # 如果验证敲门成功
+            if validation_result['content'] != 'invalid':
+                self.log(con="成功登陆应用服务器！")
+                self.log(con=validation_result)
+                self.access_application(appserver_ip, ssl_appServer, credential)
 
-                # 关闭连接，返回结果
-                ssl_appServer.close()
-                return validation_result
+            # 关闭连接，返回结果
+            ssl_appServer.close()
+            return validation_result
 
-            except Exception as e:
-                self.log(type=ERROR, con=e)
-                break
+        except Exception as e:
+            self.log(type=ERROR, con=e)
 
         ssl_appServer.close()
         return 'invalid'

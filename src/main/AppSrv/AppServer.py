@@ -27,32 +27,38 @@ except Exception as e:
 
 
 def sendAppContent():
-    response = requests.get(global_config['AppServer']['appLoc'])
+    # response = requests.get(global_config['AppServer']['appLoc'])
     return open('/Users/ylcao/Documents/code/python/github/SDP/src/main/AppSrv/app.html', 'r').read()
     return response.text
 
 
 def appInstance(client_socket, ip_addr, message:dict):
     debug(is_debug_mode)
-    
-    while True:
-        try:
-            # 每次消息都检验凭证是否合法
-            Request_result = valid_request(message, message['credential'])
-            # 凭证无效
-            if Request_result == 'invalid':
-                # 发送凭证无效信息
-                client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='pol', mess=message))
+
+    # 检验凭证是否合法
+    Request_result = valid_request(message, message['credential'])
+    # 凭证无效
+    if Request_result == 'invalid':
+        # 发送凭证无效信息
+        log(con='凭证无效')
+        client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='pol', mess=message))
+    else:
+        # 凭证有效
+        log(con='凭证有效')
+        log(type=SEND, con=sendAppContent())
+        client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='con', mess=sendAppContent()))
+        while True:
+            try:
+                data = client_socket.recv(1024)
+                # 每次消息都检验凭证是否合法
+                if data:
+                    valid_request(json.loads(data.decode('utf-8')), json.loads(data.decode('utf-8'))['credential'])
+                else:
+                    break
+            except Exception as e:
+                log(con='会话出错 '+str(e), type=ERROR)
                 break
-            # 凭证有效
-            else:
-                client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='con', mess=sendAppContent()))
-
-        except Exception as e:
-            log(con='会话出错 '+str(e), type=ERROR)
-            break
     
-
     client_socket.close()
 
 
@@ -75,38 +81,33 @@ def valid_request(message: dict, current_credential:str) -> str:
             continue
     
     
-    while True:
-        try:
-            
-            # 发送用户凭证消息
-            ssl_authServer.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='cre', mess=current_credential))
-            # 服务器返回验证消息
-            date = ssl_authServer.recv(1024)
-            if not date:
-                log(type=DISCONNECT, add=global_config['AuthServer']['ip'])
-                break
-            # 解码消息
-            date_str = date.decode('utf-8').strip()
-            # 打印消息
-            log(type=RECEIVE, add=global_config['AuthServer']['ip'], con=date_str)
-
-
-            # 解析消息
-            server_result = json.loads(date_str)
-
-            if server_result['content'] != 'invalid':
-                ssl_authServer.close()
-                return server_result['content']
-            
+    try:
+        # 发送用户凭证消息
+        ssl_authServer.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='cre', mess=current_credential))
+        # 服务器返回验证消息
+        date = ssl_authServer.recv(1024)
+        if not date:
+            log(type=DISCONNECT, add=global_config['AuthServer']['ip'])
             return 'invalid'
+        # 解码消息
+        date_str = date.decode('utf-8').strip()
+        # 打印消息
+        log(type=RECEIVE, add=global_config['AuthServer']['ip'], con=date_str)
 
-        except Exception as e:
-            log(con='会话出错 '+str(e), type=ERROR)
-            print(e)
-            break
-    
-    ssl_authServer.close()
-    return 'invalid'
+
+        # 解析消息
+        server_result = json.loads(date_str)
+
+        if server_result['content'] != 'invalid':
+            ssl_authServer.close()
+            return server_result['content']
+        
+        return 'invalid'
+
+    except Exception as e:
+        log(con='会话出错 '+str(e), type=ERROR)
+        print(e)
+        return 'invalid'
 
 
 
