@@ -1,5 +1,5 @@
 AuthServer:
-  ip: '172.20.21.159'
+  ip: '127.0.0.1'
   port: 1111
 AppServer:
   port: 2222

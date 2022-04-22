@@ -28,7 +28,7 @@ except Exception as e:
 
 def sendAppContent():
     response = requests.get(global_config['AppServer']['appLoc'])
-    return "</head>\n<body\nclass='typora-export'><div\nclass='typora-export-content'>\n<div id='write'\nclass=''><h1 id='你好'><span>你好！</span></h1><p><span>你成功访问了应用页面！</span></p></div></div>\n</body>\n</html>"
+    return open('/Users/ylcao/Documents/code/python/github/SDP/src/main/AppSrv/app.html', 'r').read()
     return response.text
 
 

@@ -13,17 +13,29 @@
   <property name="windowTitle">
    <string>SDP客户端</string>
   </property>
-  <widget class="QTextBrowser" name="brower">
+  <widget class="QWebEngineView" name="brower">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>711</width>
-     <height>571</height>
+     <x>0</x>
+     <y>0</y>
+     <width>731</width>
+     <height>591</height>
     </rect>
+   </property>
+   <property name="url">
+    <url>
+     <string>about:blank</string>
+    </url>
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QWebEngineView</class>
+   <extends>QWidget</extends>
+   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -174,6 +174,7 @@ class ClientWindow:
                 self.log(con=accesss_result)
                 self.ui2.brower.clear()
                 self.ui2.brower.append(accesss_result['content'])
+                self.ui2.brower.load
                 return
 
             # 关闭连接，返回结果
