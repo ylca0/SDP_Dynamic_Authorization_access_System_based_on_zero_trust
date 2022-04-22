@@ -1,5 +1,5 @@
 AuthServer:
-  ip: '127.0.0.1'
+  ip: '172.20.21.159'
   port: 1111
   id: 1
   db_host: 'localhost'
@@ -15,3 +15,5 @@ AppServer:
   ip: '127.0.0.1'
   listen_num: 5
 
+
+isDebugMode: false

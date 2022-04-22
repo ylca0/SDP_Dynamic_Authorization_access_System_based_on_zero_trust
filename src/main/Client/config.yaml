@@ -1,0 +1,10 @@
+AuthServer:
+  ip: '172.20.21.159'
+  port: 1111
+  id: 1
+  certificate_validity: 60
+AppServer:
+  port: 2222
+  id: 1
+
+isDebugMode: false

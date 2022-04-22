@@ -1,0 +1,11 @@
+AuthServer:
+  ip: '172.20.21.159'
+  port: 1111
+AppServer:
+  port: 2222
+  id: 1
+  ip: '127.0.0.1'
+  listen_num: 5
+  appLoc: 'http://172.17.10.6'
+
+isDebugMode: false

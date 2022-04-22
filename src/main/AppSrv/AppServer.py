@@ -1,67 +1,55 @@
 # coding : utf-8
 
 
-import socket
-import subprocess
 import threading
 from time import ctime, sleep
-from util import *
 import yaml
+from util import *
+import requests
 
 
 print('=========SDP应用服务器=========')
 # 读取配置文件
 try:
-    f = open('config.yaml', 'r')
+    f = open('/Users/ylcao/Documents/code/python/github/SDP/src/main/AppSrv/config.yaml', 'r')
     global_config = yaml.load(f.read(), Loader=yaml.FullLoader)
+    is_debug_mode = global_config['isDebugMode']
     # {'AuthServer': {'port': 6789, 'id': 1, 'db_host': 'localhost', 'db_user': 'root', 'db_password': '', 'db_database': 'SDP', 'certificate_validity': 60}, 'AppServer': {'port': 6790, 'id': 1}, 'Client': {'id': 1}}
     print('==========读取配置文件=========')
-    f = open('config.yaml', 'r')
+    f = open('/Users/ylcao/Documents/code/python/github/SDP/src/main/AppSrv/config.yaml', 'r')
+
     print(f.read() + '\n===============================')
     f.close()
 
 except Exception as e:
-    print('配置读取错误！错误信息：')
-    print(e)
+    log(con='配置读取错误！错误信息'+str(e), type=ERROR)
     exit(1)
 
 
+def sendAppContent():
+    response = requests.get(global_config['AppServer']['appLoc'])
+    return "</head>\n<body\nclass='typora-export'><div\nclass='typora-export-content'>\n<div id='write'\nclass=''><h1 id='你好'><span>你好！</span></h1><p><span>你成功访问了应用页面！</span></p></div></div>\n</body>\n</html>"
+    return response.text
 
 
-def appInstance(client_socket, ip_addr, userInfo:dict):
-    # out_text = subprocess.check_output(['python', '/Users/ylcao/Documents/code/python/github/SDP/src/app.py'])
-    # client_socket.send(pack_mess(uIP=userInfo['userIP'], uID=userInfo['userID'], sIP=userInfo['serverIP'], sID=userInfo['serverID'], cre='', mess_type='con', mess=out_text))
+def appInstance(client_socket, ip_addr, message:dict):
+    debug(is_debug_mode)
     
     while True:
         try:
-            # 接收消息
-            date = client_socket.recv(1024)
-            if not date:
-                print('\n[%s] 失去用户客户端的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
-                break
-            # 解码消息
-            date_str = date.decode('utf-8').strip()
-
-            # 打印消息
-            print(f'\n[{ctime()}] 来自 ' + ip_addr[0] + ' 的消息: ' + date_str)
-
-            # 解析消息
-            message = json.loads(date_str)
-            
             # 每次消息都检验凭证是否合法
-            Request_result = accessRequest(message, message['credential'])
+            Request_result = valid_request(message, message['credential'])
             # 凭证无效
             if Request_result == 'invalid':
                 # 发送凭证无效信息
-                client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=userInfo['serverID'], cre='', mess_type='pol', mess=Request_result))
+                client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='pol', mess=message))
                 break
             # 凭证有效
             else:
-                client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=userInfo['serverID'], cre='', mess_type='con', mess='成功访问应用'))
-       
+                client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='con', mess=sendAppContent()))
+
         except Exception as e:
-            print('会话出错:')
-            print(e)
+            log(con='会话出错 '+str(e), type=ERROR)
             break
     
 
@@ -69,20 +57,20 @@ def appInstance(client_socket, ip_addr, userInfo:dict):
 
 
 
-def accessRequest(message: dict, current_credential:str) -> str:
+def valid_request(message: dict, current_credential:str) -> str:
+    debug(is_debug_mode)
 
     # 连接权限服务器
     while True:
         try:
-            authServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            authServer.connect((global_config['AuthServer']['ip'], int(global_config['AuthServer']['port'])))
-            print('权限服务器连接成功')
+            ssl_authServer = ssl_client(global_config['AuthServer']['ip'], global_config['AuthServer']['port'])
+            log(con='权限服务器连接成功 '+global_config['AuthServer']['ip'])
             # 接收消息
-            authServer.recv(1024)
+            ssl_authServer.recv(1024)
             break
         except Exception as e:
-            print(f'[{ctime()}] 连接权限服务器失败，五秒后重试...')
-            authServer.close()
+            log(con=f'连接权限服务器失败，五秒后重试...', type=ERROR)
+            ssl_authServer.close()
             sleep(5)
             continue
     
@@ -91,38 +79,41 @@ def accessRequest(message: dict, current_credential:str) -> str:
         try:
             
             # 发送用户凭证消息
-            authServer.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='cre', mess=current_credential))
+            ssl_authServer.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='cre', mess=current_credential))
             # 服务器返回验证消息
-            date = authServer.recv(1024)
+            date = ssl_authServer.recv(1024)
             if not date:
-                print('\n[%s] 失去权限服务器的连接:%s ' % (ctime(), global_config['AuthServer']['ip']))
+                log(type=DISCONNECT, add=global_config['AuthServer']['ip'])
                 break
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'\n[{ctime()}] 来自 ' + global_config['AuthServer']['ip'] + ' 的消息: ' + date_str)
+            log(type=RECEIVE, add=global_config['AuthServer']['ip'], con=date_str)
+
+
             # 解析消息
             server_result = json.loads(date_str)
 
             if server_result['content'] != 'invalid':
-                authServer.close()
+                ssl_authServer.close()
                 return server_result['content']
             
             return 'invalid'
 
         except Exception as e:
-            print('会话出错:')
+            log(con='会话出错 '+str(e), type=ERROR)
             print(e)
             break
     
-    authServer.close()
+    ssl_authServer.close()
     return 'invalid'
 
 
 
 # 处理新建的连接
 def tcp_link(client_socket, ip_addr):
-    print("\n新的用户资源访问连接：%s" % str(ip_addr))
+    debug(is_debug_mode)
+    log(con='新的用户资源访问连接', type=CONNECTION, add=ip_addr)
 
     msg = '欢迎访问SDP应用服务器！' + "\r\n"
     client_socket.send(msg.encode('utf-8'))
@@ -132,14 +123,15 @@ def tcp_link(client_socket, ip_addr):
         # 接受来自客户端数据
         date = client_socket.recv(1024)
         if not date:
-            print('[%s] 连接断开:%s ' % (ctime(), str(ip_addr)))
+            log(add=ip_addr, type=DISCONNECT)
             break
 
         try:
             # 解码消息
             date_str = date.decode('utf-8').strip()
             # 打印消息
-            print(f'\n[{ctime()}] 来自 {ip_addr} 的消息: {date_str}')
+            log(type=RECEIVE, add=ip_addr, con=date_str)
+
 
             # 解析消息到字典变量
             message = json.loads(date_str)
@@ -147,7 +139,7 @@ def tcp_link(client_socket, ip_addr):
             # 处理消息
             if message['mess_type'] == 'cre':
                 # 调用登陆函数
-                Request_result = accessRequest(message, message['content'])
+                Request_result = valid_request(message, message['content'])
                 # 凭证无效
                 if Request_result == 'invalid':
                     # 发送凭证无效信息
@@ -157,16 +149,16 @@ def tcp_link(client_socket, ip_addr):
                 else:
                     # 发送凭证权限信息
                     client_socket.send(pack_mess(uIP=message['userIP'], uID=message['userID'], sIP=message['serverIP'], sID=message['serverID'], cre='', mess_type='pol', mess=Request_result))
-                    # app实例接管
-                    appInstance(client_socket, ip_addr, message)
-                    # 实例运行完成即断开连接
-                    break
+            elif message['mess_type'] == 'con':
+                # app实例接管
+                appInstance(client_socket, ip_addr, message)
+                # 实例运行完成即断开连接
+                break
 
 
         except Exception as e:
             client_socket.send(f'请求处理错误！连接断开：{ip_addr}\n'.encode('utf-8'))
-            print(f'请求处理错误！连接断开：{ip_addr}')
-            print(e)
+            log(con='请求处理错误！连接断开: '+ip_addr, type=ERROR)
             break
 
     # 关闭套接字，释放资源
@@ -177,28 +169,20 @@ def tcp_link(client_socket, ip_addr):
 
 
 def main():
+    debug(is_debug_mode)
     global db
-    # 创建 socket 对象
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # 设置通讯端口
-    port = global_config['AppServer']['port']
-
-    # 监听
-    server_socket.bind(("0.0.0.0", port))
-
-    # 设置最大连接数，超过后排队
-    server_socket.listen(5)
+    ssl_socket = ssl_server(global_config['AppServer']['ip'], global_config['AppServer']['port'], global_config['AppServer']['listen_num'])
 
     # 循环建立新的连接
     while True:
         try:
             # 建立客户端连接
-            client_socket, ip_addr = server_socket.accept()
+            client_socket, ip_addr = ssl_socket.accept()
 
             t = threading.Thread(
                 target=tcp_link, args=(client_socket, ip_addr))
-            t.setDaemon(True)
+            t.setDaemon = True
             t.start()
 
         except Exception as e:
@@ -206,7 +190,7 @@ def main():
             break
 
     # 关闭连接
-    server_socket.close()
+    ssl_socket.close()
     # 关闭数据库
     db.close()
 
